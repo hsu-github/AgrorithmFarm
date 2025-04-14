@@ -19,19 +19,6 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = st.secrets["AWS_SECRET_ACCESS_KEY"]
 os.environ["AWS_DEFAULT_REGION"] = st.secrets["AWS_DEFAULT_REGION"]
 
 def main():
-# Preload image dictionaries when the app starts
-    if "image_data_loaded" not in st.session_state:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        base_dir = os.path.abspath(os.path.join(script_dir, ".."))
-        RESDIR_PATH = os.path.join(base_dir, "Data", "Raw", "CAFBRain_Dataset")
-
-        with st.spinner("Loading image data...(This may take within a minute)"):
-            result_dict = _image_processing(RESDIR_PATH)
-            st.session_state.image_data_loaded = True
-            st.session_state.collateral_images_dict = result_dict["collateral_images_dict"]
-            st.session_state.powerpoints_images_dict = result_dict["powerpoints_images_dict"]
-            st.session_state.blog_posts_images_dict = result_dict["blog_posts_images_dict"]
-
     st.title("Interactive Content Generation Chatbot")
 
     # Automatically assign your hardcoded API key
