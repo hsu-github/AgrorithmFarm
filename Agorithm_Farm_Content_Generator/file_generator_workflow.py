@@ -564,10 +564,18 @@ def run_text_creation_workflow(user_request, api_key, file_type="general", model
             else:
                 # Only show the generate button if we don't have images yet
                 if st.button("🖼 Generate Related Images From History Documents"):
-                    script_dir = os.path.dirname(os.path.abspath(__file__))
-                    base_dir = os.path.abspath(os.path.join(script_dir, ".."))
-                    RESDIR_PATH = os.path.join(base_dir, "Data", "Raw", "CAFBRain_Dataset")
-                    
+                    if "image_data_loaded" not in st.session_state:
+                        script_dir = os.path.dirname(os.path.abspath(__file__))
+                        base_dir = os.path.abspath(os.path.join(script_dir, ".."))
+                        RESDIR_PATH = os.path.join(base_dir, "Data", "Raw", "CAFBRain_Dataset")
+                
+                        with st.spinner("Loading image data...(This may take within a minute)"):
+                            result_dict = _image_processing(RESDIR_PATH)
+                            st.session_state.image_data_loaded = True
+                            st.session_state.collateral_images_dict = result_dict["collateral_images_dict"]
+                            st.session_state.powerpoints_images_dict = result_dict["powerpoints_images_dict"]
+                            st.session_state.blog_posts_images_dict = result_dict["blog_posts_images_dict"]
+                
                     with st.spinner("Processing images from history documents..."):
                         rag = st.session_state.rag_model
                         matched_images = rag.collect_images_from_dicts(
@@ -575,9 +583,9 @@ def run_text_creation_workflow(user_request, api_key, file_type="general", model
                             st.session_state.powerpoints_images_dict,
                             st.session_state.blog_posts_images_dict
                         )
-
                         st.session_state.related_images = matched_images  # Save result
                         st.rerun()
+
 
 
 def slide_function(api_key, user_request):
