@@ -17,15 +17,17 @@ HARDCODED_API_KEY = st.secrets["OPENAI_API_KEY"]
 os.environ["AWS_ACCESS_KEY_ID"] = st.secrets["AWS_ACCESS_KEY_ID"]
 os.environ["AWS_SECRET_ACCESS_KEY"] = st.secrets["AWS_SECRET_ACCESS_KEY"]
 os.environ["AWS_DEFAULT_REGION"] = st.secrets["AWS_DEFAULT_REGION"]
+AWS_path = st.secrets["AWS_path"]
 
 def main():
+
     st.title("Agrorithm Farm")
 
-    # Automatically assign your hardcoded API key
+    # ✅ Automatically assign your hardcoded API key
     if "api_key" not in st.session_state:
         st.session_state.api_key = HARDCODED_API_KEY
 
-    # Show only model selection if not yet set
+    # ✅ Show only model selection if not yet set
     if "llm_model_name" not in st.session_state:
         model_option = st.radio(
             "Choose the LLM model you want to use:",
@@ -48,9 +50,9 @@ def main():
 def run_standard_workflow():
 
     if st.button("🔄 Reset"):
-        # Save the existing API key temporarily
+        # ✅ Save the existing API key temporarily
         saved_api_key = st.session_state.get("api_key", "")
-        # Clear all other workflow-related keys
+        # ❌ Clear all other workflow-related keys
         keys_to_clear = [
             "file_type", "workflow_started", "workflow_step", "user_request",
             "uploaded_files", "uploaded_file_text", "original_post",
@@ -62,7 +64,7 @@ def run_standard_workflow():
         ]
         for key in keys_to_clear:
             st.session_state.pop(key, None)
-        # Restore the saved API key to prefill the input
+        # ✅ Restore the saved API key to prefill the input
         st.session_state["api_key"] = saved_api_key
         st.rerun()
 
@@ -89,7 +91,7 @@ def run_standard_workflow():
             key="file_type_radio"
         )
 
-        # Clear selection using rerun workaround
+        # ❌ Clear selection using rerun workaround
         if st.session_state.file_type_radio is not None:
             if st.button("🚫 Clear Content Type Selection"):
                 # Mark for clearing on next run
@@ -101,20 +103,20 @@ def run_standard_workflow():
                     del st.session_state["file_type"]
                 st.rerun()
 
-        # Clear the radio key before re-rendering it
+        # 👇 Clear the radio key before re-rendering it
         if st.session_state.get("clear_radio", False):
             del st.session_state["file_type_radio"]
             del st.session_state["clear_radio"]
             st.rerun()
 
-        # User request
+        # 📝 User request
         user_request = st.text_area(
             "Describe what you'd like to generate:",
             value=st.session_state.get("user_request", ""),
             key="user_request_input"
         )
 
-        # File uploader
+        # 📎 File uploader
         uploaded_files = st.file_uploader(
             "Upload supporting files (optional):",
             type=["pdf", "docx", "txt", "json", "jsonl", "csv", "xlsx", "pptx", "png", "jpg", "jpeg", "mp4"],
@@ -128,7 +130,7 @@ def run_standard_workflow():
         url_input = st.text_input("Or enter a URL (optional):", key="url_input")
         st.session_state.user_provided_url = url_input.strip()
 
-        # GENERATE
+        # ✅ GENERATE
         if st.button("📄 Convert & Start Workflow"):
             file_type = st.session_state.get("file_type_radio", "general")
             st.session_state.file_type = file_type
@@ -146,7 +148,7 @@ def run_standard_workflow():
                     markdown_text = convert_file_to_markdown(client, temp_path)
                     combined_file_text += f"\n\n---\n📄 File {i}: {file.name}\n{markdown_text}"
 
-            # Handle URL input by downloading content and converting it
+            # ✅ Handle URL input by downloading content and converting it
             if url_input.strip():
                 response = requests.get(url_input.strip())
                 if response.status_code == 200:
