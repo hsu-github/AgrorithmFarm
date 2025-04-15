@@ -19,7 +19,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = st.secrets["AWS_SECRET_ACCESS_KEY"]
 os.environ["AWS_DEFAULT_REGION"] = st.secrets["AWS_DEFAULT_REGION"]
 
 def main():
-    st.title("Interactive Content Generation Chatbot")
+    st.title("Agrorithm Farm")
 
     # Automatically assign your hardcoded API key
     if "api_key" not in st.session_state:
@@ -30,7 +30,7 @@ def main():
         model_option = st.radio(
             "Choose the LLM model you want to use:",
             [
-                "Algorithm Farm model",
+                "Fine tuned GPT-4o-mini",
                 "GPT4o-mini Model"
             ],
             index=0
