@@ -32,8 +32,7 @@ import traceback # For detailed error logging
 script_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.abspath(os.path.join(script_dir, ".."))
 document_path = os.path.join(base_dir, "Data", "Processed", "Text")
-ppt_template_path = os.path.join(base_dir, "Models", "Slides_generator", "PPT_01.pptx")
-photo_path = os.path.join(base_dir, "Models", "Slides_generator", "photo.jpg")
+ppt_template_path = os.path.join(base_dir, "Data", "PPT_01.pptx")
 
 # Model & Generation Config
 # LLM_MODEL = "gpt-4o-mini"
