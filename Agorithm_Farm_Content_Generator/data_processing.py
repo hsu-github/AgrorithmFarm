@@ -5,7 +5,12 @@ import cv2
 from PIL import Image
 from langchain_core.documents import Document
 import warnings
-warnings.simplefilter("ignore", category=FutureWarning)
+import io
+import numpy as np
+
+import streamlit as st
+from st_files_connection import FilesConnection
+from tqdm import tqdm
 
 def _read_images(RESDIR_PATH):
     """
@@ -15,11 +20,38 @@ def _read_images(RESDIR_PATH):
     Returns:
     dict: A dictionary where keys are filenames and values are original images as NumPy arrays.
     """
-    images_path = os.path.join(RESDIR_PATH, "images")
-    images_dict = {
-        f: cv2.imread(os.path.join(images_path, f))
-        for f in os.listdir(images_path) if f.lower().endswith(".png")
-    }
+    conn = st.connection('s3', type=FilesConnection)
+
+    images_dict = {}
+    try:
+        # List all PNG files in the S3 bucket
+        image_files = conn.fs.glob(os.path.join(RESDIR_PATH, "images/*.png"))
+        print("get image file")
+        
+
+        for image_path in tqdm(image_files, desc="Loading images", unit="image"):
+            # Extract just the filename from the path
+            filename = os.path.basename(image_path)
+            
+            # Open the file as bytes
+            with conn.open(image_path, "rb") as f:
+                image_bytes = f.read()
+                
+            # First read with PIL to handle color profiles
+            img_pil = Image.open(io.BytesIO(image_bytes))
+            # Convert to RGB if not already
+            if img_pil.mode != 'RGB':
+                img_pil = img_pil.convert('RGB')
+            # Convert PIL image to numpy array
+            img_np = np.array(img_pil)
+            # Convert RGB to BGR for OpenCV
+            img = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+            
+            # Add to dictionary
+            images_dict[filename] = img
+    except Exception as e:
+        print(f"Error loading images from S3: {str(e)}")
+
     return images_dict
 
 def _convert_image_to_tokens(images_dict):
@@ -53,21 +85,31 @@ def _convert_image_to_tokens(images_dict):
 
 def _convert_jsonl_to_json(jsonl_files):
     """Convert a JSONL file to a JSON file."""
-    for jsonl_file in jsonl_files:
-        if not os.path.exists(jsonl_file):
-            print(f"[ERROR] File not found: {jsonl_file}")
-            continue
-
+    conn = st.connection('s3', type=FilesConnection)
+    
+    try:
+        # Check if file exists in S3
         try:
-            with open(jsonl_file, "r", encoding="utf-8") as infile:
-                data = [json.loads(line) for line in infile if line.strip()]
-
-            return data  # Instead of writing to a file, return the parsed JSON data
-
-        except json.JSONDecodeError as e:
-            print(f"[ERROR] Failed to parse {jsonl_file}: {e}")
+            with conn.open(jsonl_files, "r", encoding="utf-8") as infile:
+                data = []
+                for line in infile:
+                    if isinstance(line, str) and line.strip():
+                        try:
+                            data.append(json.loads(line))
+                        except json.JSONDecodeError:
+                            print(f"[ERROR] Failed to parse line in {jsonl_files}")
         except Exception as e:
-            print(f"[ERROR] An unexpected error occurred: {e}")
+            print(f"[ERROR] Failed to access {jsonl_files} in S3: {e}")
+            return []
+
+        return data  # Instead of writing to a file, return the parsed JSON data
+
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] Failed to parse {jsonl_files}: {e}")
+        return []
+    except Exception as e:
+        print(f"[ERROR] An unexpected error occurred: {e}")
+        return []
 
 def _replace_filenames_with_images(image_filenames_dict, images_dict):
     """
@@ -102,7 +144,7 @@ def _read_collateral_json(RESDIR_PATH):
     jsonl_path = os.path.join(RESDIR_PATH, "text", "collateral.jsonl")
 
     # Convert JSONL to JSON (in memory, no file written)
-    data = _convert_jsonl_to_json([jsonl_path])
+    data = _convert_jsonl_to_json(jsonl_path)
     if not data:
         print(f"[ERROR] Failed to load data from {jsonl_path}")
         return {}, {}
@@ -148,7 +190,7 @@ def _read_powerpoints_json(RESDIR_PATH):
     jsonl_path = os.path.join(RESDIR_PATH, "text", "powerpoints.jsonl")
 
     # Convert JSONL to JSON (in memory, no file written)
-    data = _convert_jsonl_to_json([jsonl_path])
+    data = _convert_jsonl_to_json(jsonl_path)
     if not data:
         print(f"[ERROR] Failed to load data from {jsonl_path}")
         return {}, {}
@@ -195,7 +237,7 @@ def _read_blog_posts_json(RESDIR_PATH):
     jsonl_path = os.path.join(RESDIR_PATH, "text", "blog_posts.jsonl")
 
     # Convert JSONL to JSON (in memory, no file written)
-    data = _convert_jsonl_to_json([jsonl_path])
+    data = _convert_jsonl_to_json(jsonl_path)
     if not data:
         print(f"[ERROR] Failed to load data from {jsonl_path}")
         return {}, {}
@@ -457,6 +499,7 @@ def _image_processing(RESDIR_PATH, image_captions=False):
     Returns:
     dict: A dictionary with keys as variable names and values as the corresponding data.
     """
+    # Read images from S3
     images_dict = _read_images(RESDIR_PATH)
     
     _, collateral_image_filenames_dict = _read_collateral_json(RESDIR_PATH)
@@ -495,3 +538,32 @@ def _image_processing(RESDIR_PATH, image_captions=False):
         print(key)
 
     return result_dict
+
+def _image_processing_filenames(RESDIR_PATH):
+    """
+    Calls all data processing functions to read and structure data from CAFBRain_Dataset.
+    Returns a dictionary containing the processed data.
+    
+    Returns:
+    dict: A dictionary with keys as variable names and values as the corresponding data (filenames only).
+    """
+    _, collateral_image_filenames_dict = _read_collateral_json(RESDIR_PATH)
+    
+    _, powerpoints_image_filenames_dict = _read_powerpoints_json(RESDIR_PATH)
+    
+    _, blog_posts_image_filenames_dict = _read_blog_posts_json(RESDIR_PATH)
+
+    # Define return dictionary
+    result_dict = {
+        "collateral_image_filenames_dict": collateral_image_filenames_dict,
+        "powerpoints_image_filenames_dict": powerpoints_image_filenames_dict,
+        "blog_posts_image_filenames_dict": blog_posts_image_filenames_dict,
+    }
+
+    # Print keys in the required format
+    # print("All parameters:")
+    # for key in result_dict.keys():
+    #     print(key)
+
+    return result_dict
+

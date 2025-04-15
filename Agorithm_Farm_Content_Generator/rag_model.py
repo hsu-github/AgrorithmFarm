@@ -90,17 +90,16 @@ Include in your JSON:
   "slides": [
     // --- Example Slide Type: Standard (Bullet Points) ---
     {{{{
-      "slide_type": "standard", // Type: standard, pie_chart, progress, comparison, process_steps, three_columns, key_message, quote etc.
-      "header": "Engaging Slide Title (max 10 words)",
+      "slide_type": "standard", // Type: standard, pie_chart, progress, comparison, process_steps, three_columns etc.
+      "header": "Engaging Slide Title (max 5 words)",
       "bullets": [ // Use 'bullets' only for 'standard' type slides
         {{{{
           "text": "Clear, actionable key point (5-10 words)",
-          "explanation": "Insightful explanation adding value (2-3 complete sentences)"
+          "explanation": "Insightful complete explanation adding value (2-3 complete sentences)"
         }}}}
         // ... 3-4 bullet points total ...
       ],
-      "include_background_image": true, // boolean: true if a background/thematic image enhances this slide
-      "image_prompt": "Optional: Detailed DALL-E prompt for a relevant, professional BACKGROUND image (if include_background_image is true, otherwise empty string). Must be safe for work."
+      "image_prompt": "Detailed DALL-E prompt for a relevant, professional BACKGROUND image. Must be safe for work."
     }}}},
     // --- Example Slide Type: Pie Chart ---
     {{{{
@@ -127,7 +126,7 @@ Include in your JSON:
     // --- Example Slide Type: Progress (Four Stage-Based) ---
     {{{{
       "slide_type": "progress (Four stage)",
-      "header": "Project Milestones & Current Status", // Title for the progress slide
+      "header": "Project Milestones & Current Status", // Title for the progress slide (2-3 words)
       "stages": [ // An array representing the sequential stages/milestones
           // ... Four stage objects with title and description
       ],
@@ -151,7 +150,7 @@ Include in your JSON:
           "Scalability: handling increasing workloads, resource requirements, and expansion capabilities.",
           "User experience: interface design, accessibility features, and learning curve.",
           "Implementation: timeline, resource requirements, training needs, and integration challenges."
-        ]
+        ]// At least 5 points that align with the metrics for effective comparison
       }}}},
       "item2": {{{{
         "title": "Item 2 Title",
@@ -161,7 +160,7 @@ Include in your JSON:
           "Scalability: handling increasing workloads, resource requirements, and expansion capabilities.",
           "User experience: interface design, accessibility features, and learning curve.",
           "Implementation: timeline, resource requirements, training needs, and integration challenges."
-        ]
+        ]// At least 5 points that align with the metrics for effective comparison
       }}}}
     }}}},
     // --- Example Slide Type: Process Steps (Three steps) ---
@@ -175,7 +174,7 @@ Include in your JSON:
     // --- Example Slide Type: Three Columns ---
     {{{{
       "slide_type": "three_columns",
-      "header": "Key Focus Areas", // Title for the slide
+      "header": "Key Focus Areas", // Title for the slide (3-5 words)
       "columns": [ // An array containing exactly three objects, one for each column
          // ... column objects with title and points ...
       ],
@@ -185,8 +184,9 @@ Include in your JSON:
 }}}}
 
 **Presentation Best Practices to Follow:**
-- **Diversify slide types:** Choose from a variety of slide formats for engagement. Options include: `standard` (text with bullets), `comparison` (side-by-side analysis), `timeline` (chronological events), `data_visualization` (charts/graphs), `quote` (highlighted statements), `case_study` (real examples), `infographic` (visual data representation), and `call_to_action` (next steps).
-- **Balance visual and text:** Use visual slides (charts, infographics) to break up text-heavy sections. Aim for 60% visual, 40% text ratio.
+
+- **Diversify slide types:** Choose from a variety of slide formats for engagement.
+- **Balance visual and text:** Use visual slides (pie_chart, progress (Four stage), three_columns, process_steps (Three steps), comparison) to break up text-heavy sections. Aim for 60% visual, 40% text ratio.
 - **Data presentation:** When using charts, ensure data is meaningful and properly contextualized with a clear `data_description`.
 - **Narrative structure:** Begin with a compelling introduction, develop key points in logical sequence, and end with impactful conclusion or action items.
 - **Content hierarchy:** Prioritize information with main points first, supporting details second.
@@ -197,7 +197,8 @@ Include in your JSON:
 - Replace any occurrence of "Capital Area Food Bank" in the title with "CAFB".
 - Return *only* the valid JSON object.
 - Do not include any introductory text, explanations, apologies, or markdown formatting like ```json before or after the JSON.
-- Ensure all strings within the JSON are properly escaped.""",
+- Ensure all strings within the JSON are properly escaped.
+""",
 
         "youtube captions": """You are a transcription assistant for Capital Area Food Bank (CAFB).
 
@@ -512,3 +513,40 @@ Guidelines:
             "visual_prompt": visual_prompt,
             "image_url": image_url
         }
+
+    def show_images(self, images, RESDIR_PATH):
+        """
+        Display a list of images using matplotlib.
+
+        Args:
+            images (list): List of image filenames (strings)
+            RESDIR_PATH (str): Directory path where images are stored
+        """
+        if not images:
+            print("No images to display.")
+            return
+
+        num_images = len(images)
+        cols = min(num_images, 4)
+        rows = (num_images + cols - 1) // cols
+
+        plt.figure(figsize=(4 * cols, 4 * rows))
+
+        for i, filename in enumerate(images):
+            image_path = os.path.join(RESDIR_PATH, filename)
+            if not os.path.exists(image_path):
+                print(f"Image not found: {image_path}")
+                continue
+
+            image = cv2.imread(image_path)
+            if image is None:
+                print(f"Failed to load image: {image_path}")
+                continue
+
+            plt.subplot(rows, cols, i + 1)
+            plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+            plt.axis("off")
+            plt.title(f"Image {i + 1}")
+
+        plt.tight_layout()
+        plt.show()

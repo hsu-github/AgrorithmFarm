@@ -72,6 +72,11 @@ def generate_text(llm, rag_model, full_prompt=None):
 
     # Optional: Log query analysis if needed
     analysis = rag_model.analyze_user_query_dict
+    # st.write("🧠 Query Analysis", analysis)
+
+    # Step 4: Display & Invoke
+    # st.text_area("🧠 Full Prompt Sent to LLM", full_prompt, height=400)
+
     result = rag_model.llm.invoke(full_prompt)
     output = result.content if hasattr(result, "content") else result
     return output

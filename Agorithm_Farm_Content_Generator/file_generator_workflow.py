@@ -1,13 +1,9 @@
 import streamlit as st
 from streamlit_quill import st_quill
-from langchain.chat_models import ChatOpenAI
-from langchain.tools import Tool
+from langchain_community.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
-from langchain.agents import initialize_agent, AgentType
 from rag_model import RAGModel
-from langchain_core.documents import Document
-from data_processing import _image_processing
+from data_processing import _image_processing_filenames
 from human_in_loop import detail_checker,build_full_prompt, generate_text, refine_post, final_edit
 import os
 import json
@@ -22,8 +18,11 @@ import markdown
 from xhtml2pdf import pisa
 from slides_generator import generate_slide_content, create_presentation, revise_slides, convert_pptx_to_images_mac, convert_pptx_to_images_win
 from openai import OpenAI
+from st_files_connection import FilesConnection
 
-# Function to generate PDF from text
+aws_path = st.secrets["AWS_path"]
+
+### Function to generate PDF from text
 def generate_pdf(markdown_text: str, filename="output.pdf") -> BytesIO:
 
 
@@ -62,7 +61,7 @@ def generate_pdf(markdown_text: str, filename="output.pdf") -> BytesIO:
     return buffer
 
 
-# Function to create a scrollable box for displaying text
+### Function to create a scrollable box for displaying text
 def scrollable_markdown(md_text: str, height: int = 400):
     html = markdown.markdown(md_text)
     st.markdown(
@@ -75,7 +74,7 @@ def scrollable_markdown(md_text: str, height: int = 400):
         unsafe_allow_html=True
     )
 
-# Function to reset the entire system
+### Function to reset the entire system
 def reset_entire_system():
     saved_api_key = st.session_state.get("api_key", None)
     # Clear everything
@@ -106,7 +105,7 @@ def determine_content_type(llm, user_request):
         response = "general"  # Default safety net
     return response
 
-# Function to run the file creation workflow
+### Function to run the file creation workflow
 def run_text_creation_workflow(user_request, api_key, file_type="general", model_name="ft:gpt-4o-mini-2024-07-18:umd::BJkpoMrt", temperature=0.7):
     llm = ChatOpenAI(openai_api_key=api_key, model_name="gpt-4o-mini-2024-07-18", temperature=temperature)
     llm_select = ChatOpenAI(openai_api_key=api_key, model_name=model_name, temperature=temperature)
@@ -114,10 +113,10 @@ def run_text_creation_workflow(user_request, api_key, file_type="general", model
     if "rag_model" not in st.session_state:
         file_path = load_rag_documents()
         
-        # ✅ Initialize memory
+        # Initialize memory
         memory = ConversationBufferMemory(memory_key="chat_history")
 
-        # ✅ Create RAG model
+        # Create RAG model
         st.session_state.rag_model = RAGModel(
             document_path=file_path,
             llm=llm,
@@ -155,6 +154,7 @@ def run_text_creation_workflow(user_request, api_key, file_type="general", model
 
     elif st.session_state.workflow_step == "awaiting_details":
         st.write("Model response:")
+        # st.write("request and file" ,st.session_state.full_request)
         st.write(st.session_state.detail_response.strip())
 
         additional_info = st.text_area("Please provide more details if you'd like (optional):", key="details_input")
@@ -203,7 +203,7 @@ def run_text_creation_workflow(user_request, api_key, file_type="general", model
 
         st.markdown("---")
 
-        # Add "Go Back to Add Files" button
+        # 🧭 Add "Go Back to Add Files" button
         col_back, col_spacer = st.columns([1, 5])
         with col_back:
             if st.button("🔙 Go Back to Upload Files"):
@@ -225,6 +225,7 @@ def run_text_creation_workflow(user_request, api_key, file_type="general", model
 
     elif st.session_state.workflow_step == "generate_post":
         st.write(f"Generating ...")
+        # full_prompt = st.session_state.full_request + f" Type: {file_type}"  # Already contains user request + uploaded file text
         initial_post = generate_text(
             llm_select,
             st.session_state.rag_model,
@@ -555,7 +556,14 @@ def run_text_creation_workflow(user_request, api_key, file_type="general", model
                 for i, img in enumerate(st.session_state.related_images):
                     if img is not None:
                         with cols[i % 4]:
-                            st.image(img, channels="BGR", caption=f"Image {i+1}", use_container_width=True)
+                            # Create a connection to S3
+                            conn = st.connection('s3', type=FilesConnection)
+                            # Get the image directly from AWS S3
+                            image_path = os.path.join(aws_path, 'images', img) 
+                            with conn.open(image_path, 'rb') as s3_file:
+                                image_bytes = s3_file.read()
+
+                                st.image(image_bytes)
                 
                 # Add option to regenerate related images
                 if st.button("🔄 Regenerate Related Images"):
@@ -565,16 +573,15 @@ def run_text_creation_workflow(user_request, api_key, file_type="general", model
                 # Only show the generate button if we don't have images yet
                 if st.button("🖼 Generate Related Images From History Documents"):
                     if "image_data_loaded" not in st.session_state:
-                        script_dir = os.path.dirname(os.path.abspath(__file__))
-                        base_dir = os.path.abspath(os.path.join(script_dir, ".."))
-                        RESDIR_PATH = os.path.join(base_dir, "Data", "Raw", "CAFBRain_Dataset")
+                        RESDIR_PATH = st.secrets["AWS_path"]
                 
                         with st.spinner("Loading image data...(This may take within a minute)"):
-                            result_dict = _image_processing(RESDIR_PATH)
+                            result_dict = _image_processing_filenames(RESDIR_PATH)
+                            print(result_dict)
                             st.session_state.image_data_loaded = True
-                            st.session_state.collateral_images_dict = result_dict["collateral_images_dict"]
-                            st.session_state.powerpoints_images_dict = result_dict["powerpoints_images_dict"]
-                            st.session_state.blog_posts_images_dict = result_dict["blog_posts_images_dict"]
+                            st.session_state.collateral_images_dict = result_dict["collateral_image_filenames_dict"]
+                            st.session_state.powerpoints_images_dict = result_dict["powerpoints_image_filenames_dict"]
+                            st.session_state.blog_posts_images_dict = result_dict["blog_posts_image_filenames_dict"]
                 
                     with st.spinner("Processing images from history documents..."):
                         rag = st.session_state.rag_model
@@ -604,54 +611,52 @@ def slide_function(api_key, user_request):
         st.session_state.slides_json = None
 
     if st.button("Generate Slides"):
-        with st.spinner("Generating slide content..."):
-            try:
+        with st.spinner("Crafting your slide deck content..."):
                 st.session_state.slides_json = generate_slide_content(
                     final_prompt=user_request,  # topic is now user_query
                     num_slides=num_slides,
                     api_key=api_key,
                     model_name=st.session_state.get("llm_model_name", "gpt-4o-mini-2024-07-18")
                 )
-                st.success("Slide content generated successfully!")
 
                 # Create presentation
                 slides = st.session_state.slides_json
                 client = OpenAI(api_key=api_key)
                 temp_filename = slides['title'].replace(" ", "_") + ".pptx"
-                create_presentation(st.session_state.slides_json, client=client, filename=temp_filename, generate_image=generate_images)
+                create_presentation(st.session_state.slides_json, st.session_state.get("llm_model_name", "gpt-4o-mini-2024-07-18") , client=client, filename=temp_filename, generate_image=generate_images)
                 
-                # Convert and display slides
-                st.subheader("Preview Presentation")
-                try:
-                    # Check operating system and use appropriate conversion function
-                    slide_images = convert_pptx_to_images_win(temp_filename) if os.name == 'nt' else convert_pptx_to_images_mac(temp_filename)
-                    
-                    # Add a scrollable container to view all slides sequentially
-                    scroll_container = st.container()
-                    with scroll_container:
-                        for i, image_path in enumerate(slide_images):
-                            st.image(image_path)
-                            st.markdown("---")
-                    
-                    # Clean up temporary image files
-                    for image_path in slide_images:
-                        try:
-                            os.remove(image_path)
-                        except:
-                            pass
-                            
-                except Exception as e:
-                    st.error(f"Error converting slides to images: {e}")
-                
-                # Add download button
-                with open(temp_filename, "rb") as f:
-                    ppt_data = f.read()
-                st.download_button("Download Presentation", ppt_data, file_name=temp_filename, 
-                                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation")
-                
-            except Exception as e:
-                st.error(f"Error generating presentation: {e}")
-                return
+
+        # Convert and display slides
+        st.subheader("Preview Presentation")
+
+        # Check operating system and use appropriate conversion function
+        with st.spinner("Preparing slide preview images..."):
+            slide_images = convert_pptx_to_images_win(temp_filename) if os.name == 'nt' else convert_pptx_to_images_mac(temp_filename)
+        
+        st.success("Slide content generated successfully!")
+        
+        # Add a scrollable container to view all slides sequentially
+        scroll_container = st.container()
+        with scroll_container:
+            for i, image_path in enumerate(slide_images):
+                st.image(image_path)
+                st.markdown("---")
+        
+        # Clean up temporary image files
+        for image_path in slide_images:
+            try:
+                os.remove(image_path)
+            except:
+                pass
+
+
+        
+        # Add download button
+        with open(temp_filename, "rb") as f:
+            ppt_data = f.read()
+        st.download_button("Download Presentation", ppt_data, file_name=temp_filename, 
+                        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation")
+
 
     # Only show revision option if slides have been generated
     if st.session_state.slides_json is not None:
@@ -670,7 +675,7 @@ def slide_function(api_key, user_request):
                     revised_filename = revised_slides['title'].replace(" ", "_") + "_revised.pptx"
                     client = OpenAI(api_key=api_key)
                     print(revise_slides)
-                    create_presentation(revised_slides, client=client, filename=revised_filename, generate_image=generate_images)
+                    create_presentation(revised_slides, st.session_state.get("llm_model_name", "gpt-4o-mini-2024-07-18"), client=client, filename=revised_filename, generate_image=generate_images)
                     
                     # Convert and display revised slides
                     st.subheader("Preview Revised Presentation")
