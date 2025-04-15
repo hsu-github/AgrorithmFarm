@@ -106,7 +106,7 @@ def determine_content_type(llm, user_request):
     return response
 
 ### Function to run the file creation workflow
-def run_text_creation_workflow(user_request, api_key, file_type="general", model_name="ft:gpt-4o-mini-2024-07-18:umd::BJkpoMrt", temperature=0.7):
+def run_text_creation_workflow(user_request, api_key, file_type="general", model_name="ft:gpt-4o-mini-2024-07-18:umd::BJkpoMrt", temperature=0):
     llm = ChatOpenAI(openai_api_key=api_key, model_name="gpt-4o-mini-2024-07-18", temperature=temperature)
     llm_select = ChatOpenAI(openai_api_key=api_key, model_name=model_name, temperature=temperature)
 
