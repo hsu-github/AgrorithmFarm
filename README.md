@@ -64,8 +64,8 @@ It supports file uploads, URL ingestion, and manual prompts. The app combines La
 ## Setup Requirements
 
 - Python 3.8+  
-- Install the following packages:  
-  `streamlit`, `openai`, `langchain`, `transformers`, `sentence-transformers`, `python-pptx`, `Pillow`, `reportlab`, `xhtml2pdf`
+- Clone the repository and install all necessary packages by running:  
+  pip install -r requirements.txt
 
 - Set up your `st.secrets` for:
   - OpenAI API Key  
