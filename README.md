@@ -63,7 +63,6 @@ It supports file uploads, URL ingestion, and manual prompts. The app combines La
 
 ## Setup Requirements
 
-- Python 3.8+  
 - Clone the repository and install all necessary packages by running:  
   ```bash
   pip install -r requirements.txt
