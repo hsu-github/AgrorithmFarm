@@ -15,7 +15,7 @@ It supports file uploads, URL ingestion, and manual prompts. The app combines La
 ## Key Features
 
 ### Intelligent Content Generation
-- Generate structured blog posts, grant proposals, and collateral using **OpenAI GPT-4o** or a fine-tuned variant.
+- Generate structured blog posts, grant proposals, and collateral using **OpenAI GPT-4o-mini** or a fine-tuned variant.
 - Supports **tone and style refinement** with human-in-the-loop interaction.
 
 ### Presentation Slide Creation
