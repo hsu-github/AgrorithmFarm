@@ -1,6 +1,6 @@
 # Agrorithm Farm
 
-Agrorithm Farm is an interactive **Streamlit-based** application that allows users to generate high-quality content such as:
+Designed specifically for Capital Area Food Bank (CAFB), Agrorithm Farm is an interactive **Streamlit-based** application that allows users to generate high-quality content such as:
 
 - Blog posts  
 - PowerPoint presentations  
@@ -8,7 +8,7 @@ Agrorithm Farm is an interactive **Streamlit-based** application that allows use
 - Grant proposals  
 - Marketing collateral  
 
-It supports file uploads, URL ingestion, and manual prompts. The app combines Large Language Models (LLMs), image captioning, Retrieval-Augmented Generation (RAG), and dynamic slide generation into a seamless workflow.
+It supports file uploads, URL ingestion, and manual prompts. The app combines Large Language Models (LLMs), image captioning, Retrieval-Augmented Generation (RAG), and dynamic slide generation into a seamless workflow. This project is for the 2025 AI Competition at University of Maryland.
 
 ---
 
