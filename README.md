@@ -10,7 +10,7 @@ Designed specifically for Capital Area Food Bank (CAFB), Agrorithm Farm is an in
 
 Agrorithm Farm allows users to make any requests through prompts abd supports file uploads and/or URL ingestion. The app combines Large Language Models (LLMs), image captioning, Retrieval-Augmented Generation (RAG), and dynamic slide generation into a seamless workflow. 
 
-This project is the winner of 2025 AI Competition at University of Maryland.
+This project is the winner of **2025 AI Competition at University of Maryland**
 
 ---
 
