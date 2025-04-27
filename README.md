@@ -1,6 +1,6 @@
 # Agrorithm Farm
 
-Designed specifically for Capital Area Food Bank (CAFB), Agrorithm Farm is an interactive **Streamlit-based** application that allows users (CAFB staff) to generate high-quality content such as:
+Designed specifically for Capital Area Food Bank (CAFB), Agrorithm Farm is an interactive **Streamlit-based** application that allows users (CAFB staff) to generate CAFB-specific content such as:
 
 - Blog posts  
 - PowerPoint presentations  
@@ -8,21 +8,22 @@ Designed specifically for Capital Area Food Bank (CAFB), Agrorithm Farm is an in
 - Grant proposals  
 - Marketing collateral  
 
-It supports file uploads, URL ingestion, and manual prompts. The app combines Large Language Models (LLMs), image captioning, Retrieval-Augmented Generation (RAG), and dynamic slide generation into a seamless workflow. 
+Agrorithm Farm allows users to make any requests through prompts abd supports file uploads and/or URL ingestion. The app combines Large Language Models (LLMs), image captioning, Retrieval-Augmented Generation (RAG), and dynamic slide generation into a seamless workflow. 
 
-This project is for the 2025 AI Competition at University of Maryland.
+This project is the winner of 2025 AI Competition at University of Maryland.
 
 ---
 
 ## Key Features
 
 ### Intelligent Content Generation
-- Generate structured blog posts, grant proposals, and collateral using **OpenAI GPT-4o-mini** or a fine-tuned variant.
+- Generates structured blog posts, grant proposals, and collateral using a fine-tuned **OpenAI GPT-4o-mini** model.
+- Allows users to uploaed a template for these documents.
 - Supports **tone and style refinement** with human-in-the-loop interaction.
 
 ### Presentation Slide Creation
 - Converts prompt + retrieved context into structured **slide JSON**.
-- Generates dynamic PowerPoint decks with layouts like:
+- Generates dynamic PowerPoint decks with slides like:
   - Standard  
   - Pie charts  
   - Progress bars  
@@ -31,14 +32,14 @@ This project is for the 2025 AI Competition at University of Maryland.
 
 ### RAG Model (Retrieval-Augmented Generation)
 - Loads and indexes documents (blog posts, slides, collateral, transcripts).
-- Retrieves relevant chunks to build high-quality context.
+- Retrieves relevant chunks to build context.
 - Utilizes **LangChain vector store** and custom chunking logic.
 
 ### Image & Video Processing
 - Auto-captions images using the **BLIP model**.
 - S3-compatible integration to load **images, videos, and captions**.
 
-### File Support
+### Supported Files
 - Supports: `PDF`, `DOCX`, `TXT`, `CSV`, `PPTX`, `JSONL`, `MP4`, `PNG`, `JPG`, and `URLs`.
 - Converts uploaded files using **Microsoft MarkItDown** + OpenAI API.
 
