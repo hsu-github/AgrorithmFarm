@@ -1,7 +1,7 @@
 # Agrorithm Farm
 
 This project is the winner of **2025 AI Competition at University of Maryland**
-
+[Demo Video](https://agrorithm-farm.streamlit.app/)
 Designed specifically for Capital Area Food Bank (CAFB), Agrorithm Farm is an interactive **Streamlit-based** application that allows users (CAFB staff) to generate CAFB-specific content such as:
 
 - Blog posts  
