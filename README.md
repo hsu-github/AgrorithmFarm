@@ -70,10 +70,5 @@ Agrorithm Farm allows users to make any requests through prompts abd supports fi
   ```bash
   pip install -r requirements.txt
 
-- Set up your `st.secrets` for:
-  - OpenAI API Key  
-  - AWS credentials  
-- Streamlit Quill Editor for rich text refinement
-
 
 Discover and enjoy our app, [AgrorithmFarm](https://agrorithm-farm.streamlit.app/)!
